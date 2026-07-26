@@ -36,8 +36,8 @@ export class ProfessionalsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retorna o profissional vinculado ao usuário autenticado' })
-  async me(@Request() req: { user: { sub: string } }) {
-    const professional = await this.professionalRepo.findByUserId(req.user.sub)
+  async me(@Request() req: { user: { id: string } }) {
+    const professional = await this.professionalRepo.findByUserId(req.user.id)
     if (!professional) throw new NotFoundException('Profissional não encontrado para este usuário')
     return professional
   }

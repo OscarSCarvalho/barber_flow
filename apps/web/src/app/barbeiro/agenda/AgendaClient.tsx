@@ -4,13 +4,9 @@ import { useState } from 'react'
 import useSWR from 'swr'
 import { format, addDays, startOfDay, isSameDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, CalendarX } from 'lucide-react'
+import { CalendarX } from 'lucide-react'
 import AppointmentCard from '@/components/barbeiro/AppointmentCard'
 import { api } from '@/lib/api'
-
-function fetcher<T>(url: string): Promise<T> {
-  return api.get<T>(url)
-}
 
 interface Block {
   id: string
@@ -19,10 +15,13 @@ interface Block {
   reason?: string
 }
 
-export default function AgendaClient() {
+export default function AgendaClient({ token }: { token: string }) {
   const [selectedDate, setSelectedDate] = useState(startOfDay(new Date()))
 
   const dateParam = format(selectedDate, 'yyyy-MM-dd')
+
+  const fetcher = <T,>(url: string): Promise<T> => api.get<T>(url, { token })
+
   const { data, isLoading } = useSWR<{ appointments: any[]; blocks: Block[] }>(
     `/manual-blocks/schedule?date=${dateParam}T00:00:00.000Z`,
     fetcher,

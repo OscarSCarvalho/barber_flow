@@ -5,7 +5,6 @@ import { IProfessionalRepository } from '@domain/repositories/IProfessionalRepos
 import { ProfessionalNotFoundError } from '@domain/errors'
 import { Appointment } from '@domain/entities/Appointment'
 import { ManualBlock } from '@domain/entities/ManualBlock'
-import { startOfDay, endOfDay } from 'date-fns'
 
 export interface GetBarberDayScheduleInput {
   userId: string
@@ -32,8 +31,10 @@ export class GetBarberDayScheduleUseCase {
     const professional = await this.professionalRepository.findByUserId(input.userId)
     if (!professional) throw new ProfessionalNotFoundError(input.userId)
 
-    const from = startOfDay(input.date)
-    const to = endOfDay(input.date)
+    const from = new Date(input.date)
+    from.setUTCHours(0, 0, 0, 0)
+    const to = new Date(input.date)
+    to.setUTCHours(23, 59, 59, 999)
 
     const [appointments, blocks] = await Promise.all([
       this.appointmentRepository.findByProfessionalAndRange(professional.id, from, to),

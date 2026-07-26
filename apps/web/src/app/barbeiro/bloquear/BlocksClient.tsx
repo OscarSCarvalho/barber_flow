@@ -7,10 +7,6 @@ import { ptBR } from 'date-fns/locale'
 import { Ban, Trash2, Plus, AlertCircle } from 'lucide-react'
 import { api } from '@/lib/api'
 
-function fetcher<T>(url: string): Promise<T> {
-  return api.get<T>(url)
-}
-
 interface Block {
   id: string
   startsAt: string
@@ -26,7 +22,7 @@ function toLocalDatetimeValue(date: Date) {
   return `${format(date, 'yyyy-MM-dd')}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
-export default function BlocksClient() {
+export default function BlocksClient({ token }: { token: string }) {
   const tomorrow = addDays(startOfDay(new Date()), 1)
 
   const [startsAt, setStartsAt] = useState(toLocalDatetimeValue(new Date(tomorrow.setHours(9, 0))))
@@ -37,6 +33,9 @@ export default function BlocksClient() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   const previewDate = startsAt ? startsAt.split('T')[0] : format(tomorrow, 'yyyy-MM-dd')
+
+  const fetcher = <T,>(url: string): Promise<T> => api.get<T>(url, { token })
+
   const { data, mutate } = useSWR<{ blocks: Block[]; appointments: any[] }>(
     `/manual-blocks/schedule?date=${previewDate}T00:00:00.000Z`,
     fetcher,
@@ -55,7 +54,7 @@ export default function BlocksClient() {
         startsAt: new Date(startsAt).toISOString(),
         endsAt: new Date(endsAt).toISOString(),
         reason: reason || undefined,
-      })
+      }, { token })
       setReason('')
       setSuccessMsg('Horário bloqueado com sucesso!')
       mutate()
@@ -68,7 +67,7 @@ export default function BlocksClient() {
 
   async function handleDelete(id: string) {
     try {
-      await api.delete(`/manual-blocks/${id}`)
+      await api.delete(`/manual-blocks/${id}`, { token })
       mutate()
     } catch (err: any) {
       setError(err.message)
