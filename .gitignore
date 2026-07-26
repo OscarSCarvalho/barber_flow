@@ -1,0 +1,39 @@
+node_modules/
+dist/
+.next/
+build/
+out/
+
+# Env files — nunca commitar secrets
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Coverage / tests output
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# pnpm
+.pnpm-store/
+.turbo/
+
+# Next.js
+next-env.d.ts

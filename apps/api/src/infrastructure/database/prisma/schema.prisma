@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  BARBER
+  CLIENT
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  NO_SHOW
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users        User[]
+  professionals Professional[]
+  services     Service[]
+  appointments Appointment[]
+}
+
+model User {
+  id           String   @id @default(uuid())
+  tenantId     String
+  name         String
+  email        String
+  passwordHash String
+  phone        String?
+  role         Role     @default(CLIENT)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  professional Professional?
+  appointments Appointment[] @relation("ClientAppointments")
+
+  @@unique([tenantId, email])
+  @@index([tenantId, role])
+}
+
+model Professional {
+  id       String  @id @default(uuid())
+  tenantId String
+  userId   String  @unique
+  bio      String?
+  avatarUrl String?
+  isActive Boolean @default(true)
+
+  tenant       Tenant         @relation(fields: [tenantId], references: [id])
+  user         User           @relation(fields: [userId], references: [id])
+  schedules    WorkSchedule[]
+  appointments Appointment[]
+  manualBlocks ManualBlock[]
+
+  @@index([tenantId, isActive])
+}
+
+model WorkSchedule {
+  id             String    @id @default(uuid())
+  professionalId String
+  dayOfWeek      DayOfWeek
+  startTime      String    // "09:00"
+  endTime        String    // "19:00"
+  breakStart     String?   // "12:00"
+  breakEnd       String?   // "13:00"
+
+  professional Professional @relation(fields: [professionalId], references: [id])
+
+  @@unique([professionalId, dayOfWeek])
+}
+
+model Service {
+  id              String   @id @default(uuid())
+  tenantId        String
+  name            String
+  durationMinutes Int
+  priceInCents    Int
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant              Tenant               @relation(fields: [tenantId], references: [id])
+  appointmentServices AppointmentService[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId, isActive])
+}
+
+model Appointment {
+  id             String            @id @default(uuid())
+  tenantId       String
+  professionalId String
+  clientId       String?
+  clientName     String
+  clientPhone    String
+  startsAt       DateTime
+  endsAt         DateTime
+  status         AppointmentStatus @default(CONFIRMED)
+  cancelReason   String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  tenant       Tenant               @relation(fields: [tenantId], references: [id])
+  professional Professional         @relation(fields: [professionalId], references: [id])
+  client       User?                @relation("ClientAppointments", fields: [clientId], references: [id])
+  services     AppointmentService[]
+
+  @@index([tenantId, professionalId, startsAt])
+  @@index([tenantId, status])
+}
+
+model AppointmentService {
+  appointmentId String
+  serviceId     String
+  priceSnapshot Int
+  durationSnapshot Int
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+  service     Service     @relation(fields: [serviceId], references: [id])
+
+  @@id([appointmentId, serviceId])
+}
+
+model ManualBlock {
+  id             String   @id @default(uuid())
+  professionalId String
+  startsAt       DateTime
+  endsAt         DateTime
+  reason         String?
+  createdAt      DateTime @default(now())
+
+  professional Professional @relation(fields: [professionalId], references: [id])
+
+  @@index([professionalId, startsAt])
+}
