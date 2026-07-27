@@ -31,10 +31,12 @@ jobs:
       - name: Lint API
         run: pnpm --filter api lint
 
-      - name: Lint Web (TypeScript check)
+      - name: TypeScript check API
+        run: pnpm --filter api exec tsc --noEmit
+
+      - name: TypeScript check Web
         run: pnpm --filter web exec tsc --noEmit
         env:
-          # Variáveis mínimas para o type-check do Next.js não falhar em imports de env
           API_INTERNAL_URL: http://localhost:3001
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: ci-nextauth-secret-placeholder
@@ -114,16 +116,12 @@ jobs:
     needs: test
 
     env:
-      # Variáveis necessárias para o Next.js compilar sem erro
       API_INTERNAL_URL: http://localhost:3001
       NEXTAUTH_URL: http://localhost:3000
       NEXTAUTH_SECRET: ci-nextauth-secret-minimum-32-chars
       DEFAULT_TENANT_ID: tenant-test-001
-      # Variáveis da API
-      DATABASE_URL: postgresql://barberflow:barberflow@localhost:5432/barberflow_build
       JWT_SECRET: ci-jwt-secret-minimum-32-characters-x
       JWT_REFRESH_SECRET: ci-refresh-secret-minimum-32-chars-x
-      NODE_ENV: production
 
     steps:
       - uses: actions/checkout@v4
@@ -139,11 +137,14 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        env:
-          NODE_ENV: development
+
+      - name: Generate Prisma Client
+        run: pnpm --filter api exec prisma generate --schema=src/infrastructure/database/prisma/schema.prisma
 
       - name: Build API (NestJS)
         run: pnpm --filter api build
 
       - name: Build Web (Next.js)
         run: pnpm --filter web build
+        env:
+          NODE_ENV: production
