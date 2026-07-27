@@ -139,6 +139,8 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          NODE_ENV: development
 
       - name: Build API (NestJS)
         run: pnpm --filter api build
