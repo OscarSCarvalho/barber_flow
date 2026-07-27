@@ -100,10 +100,10 @@ jobs:
         run: pnpm --filter api exec prisma migrate deploy --schema=src/infrastructure/database/prisma/schema.prisma
 
       - name: Run unit tests (API)
-        run: pnpm --filter api test -- --passWithNoTests --forceExit
+        run: pnpm --filter api test
 
       - name: Run integration tests (API)
-        run: pnpm --filter api test:integration -- --passWithNoTests --forceExit
+        run: pnpm --filter api test:integration
 
   # ─────────────────────────────────────────
   # JOB 3: Build (verifica que compila sem erros)
