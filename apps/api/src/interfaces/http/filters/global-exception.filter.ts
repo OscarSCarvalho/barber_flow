@@ -40,7 +40,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus()
       const body = exception.getResponse()
-      message = typeof body === 'string' ? body : (body as any).message ?? message
+      message = typeof body === 'string' ? body : ((body as Record<string, unknown>).message as string) ?? message
     } else if (exception instanceof DomainError) {
       status = DOMAIN_ERROR_STATUS[exception.code] ?? HttpStatus.UNPROCESSABLE_ENTITY
       message = exception.message

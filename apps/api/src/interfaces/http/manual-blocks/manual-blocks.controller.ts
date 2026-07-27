@@ -25,7 +25,7 @@ export class ManualBlocksController {
 
   @Post()
   @ApiOperation({ summary: 'Cria um bloqueio manual no calendário do barbeiro' })
-  async create(@Req() req: any, @Body() dto: CreateManualBlockDto) {
+  async create(@Req() req: { user: { id: string; tenantId: string; role: string } }, @Body() dto: CreateManualBlockDto) {
     return this.createManualBlock.execute({
       userId: req.user.id,
       startsAt: new Date(dto.startsAt),
@@ -36,7 +36,7 @@ export class ManualBlocksController {
 
   @Get('schedule')
   @ApiOperation({ summary: 'Retorna agendamentos e bloqueios do barbeiro em uma data' })
-  async daySchedule(@Req() req: any, @Query('date') date: string) {
+  async daySchedule(@Req() req: { user: { id: string; tenantId: string; role: string } }, @Query('date') date: string) {
     return this.getBarberDaySchedule.execute({
       userId: req.user.id,
       date: date ? new Date(date) : new Date(),
@@ -46,7 +46,7 @@ export class ManualBlocksController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remove um bloqueio manual futuro' })
-  async remove(@Req() req: any, @Param('id') id: string) {
+  async remove(@Req() req: { user: { id: string; tenantId: string; role: string } }, @Param('id') id: string) {
     await this.deleteManualBlock.execute({ userId: req.user.id, blockId: id })
   }
 }

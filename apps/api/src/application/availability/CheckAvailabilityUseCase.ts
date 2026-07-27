@@ -1,4 +1,4 @@
-import { addMinutes, parseISO, format, startOfDay, endOfDay, isAfter, isBefore } from 'date-fns'
+import { addMinutes, startOfDay, endOfDay, isAfter, isBefore } from 'date-fns'
 import { IWorkScheduleRepository } from '@domain/repositories/IWorkScheduleRepository'
 import { IAppointmentRepository } from '@domain/repositories/IAppointmentRepository'
 import { IManualBlockRepository } from '@domain/repositories/IManualBlockRepository'

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import type { Review as PrismaReview } from '@prisma/client'
 import { PrismaService } from './prisma.service'
 import { IReviewRepository } from '@domain/repositories/IReviewRepository'
 import { Review, CreateReviewInput } from '@domain/entities/Review'
@@ -25,7 +26,7 @@ export class PrismaReviewRepository implements IReviewRepository {
     return this.map(row)
   }
 
-  private map(row: any): Review {
+  private map(row: PrismaReview): Review {
     return {
       id: row.id,
       tenantId: row.tenantId,

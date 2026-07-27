@@ -5,7 +5,7 @@ import {
   Query,
 } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
-import { IsOptional, IsString } from 'class-validator'
+import { IsString } from 'class-validator'
 import { Throttle } from '@nestjs/throttler'
 import { JwtAuthGuard } from '@interfaces/guards/jwt-auth.guard'
 import { RolesGuard } from '@interfaces/guards/roles.guard'

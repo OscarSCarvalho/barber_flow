@@ -1,6 +1,6 @@
 import { IAppointmentRepository } from '@domain/repositories/IAppointmentRepository'
 import { IServiceRepository } from '@domain/repositories/IServiceRepository'
-import { Appointment, CreateAppointmentInput } from '@domain/entities/Appointment'
+import { Appointment } from '@domain/entities/Appointment'
 import {
   AppointmentConflictError,
   PastDateError,

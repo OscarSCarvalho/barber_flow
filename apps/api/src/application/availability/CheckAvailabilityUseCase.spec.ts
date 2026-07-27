@@ -78,7 +78,7 @@ describe('CheckAvailabilityUseCase', () => {
   })
 
   it('retorna notWorking=true quando profissional não tem jornada no dia', async () => {
-    const { workScheduleRepo, appointmentRepo, manualBlockRepo, serviceRepo } = makeRepos({ schedule: null as any })
+    const { workScheduleRepo, appointmentRepo, manualBlockRepo, serviceRepo } = makeRepos({ schedule: null })
     ;(workScheduleRepo.findByProfessionalAndDay as jest.Mock).mockResolvedValue(null)
     const useCase = new CheckAvailabilityUseCase(workScheduleRepo, appointmentRepo, manualBlockRepo, serviceRepo)
 

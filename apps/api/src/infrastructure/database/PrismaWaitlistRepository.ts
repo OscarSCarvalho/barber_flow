@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import type { WaitlistEntry as PrismaWaitlistEntry } from '@prisma/client'
 import { PrismaService } from './prisma.service'
 import { IWaitlistRepository } from '@domain/repositories/IWaitlistRepository'
 import { WaitlistEntry, CreateWaitlistEntryInput, WaitlistStatus } from '@domain/entities/WaitlistEntry'
@@ -40,7 +41,7 @@ export class PrismaWaitlistRepository implements IWaitlistRepository {
     return result.count
   }
 
-  private map(row: any): WaitlistEntry {
+  private map(row: PrismaWaitlistEntry): WaitlistEntry {
     return {
       id: row.id,
       tenantId: row.tenantId,

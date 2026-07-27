@@ -1,11 +1,10 @@
 import {
   Body, Controller, Get, Param, Post,
-  UseGuards, Request, NotFoundException, ConflictException, BadRequestException,
+  NotFoundException, ConflictException, BadRequestException,
   Query,
 } from '@nestjs/common'
 import { ApiTags, ApiOperation } from '@nestjs/swagger'
 import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator'
-import { JwtAuthGuard } from '@interfaces/guards/jwt-auth.guard'
 import { CreateReviewUseCase } from '@application/reviews/CreateReviewUseCase'
 import { GetProfessionalReviewsUseCase } from '@application/reviews/GetProfessionalReviewsUseCase'
 import {

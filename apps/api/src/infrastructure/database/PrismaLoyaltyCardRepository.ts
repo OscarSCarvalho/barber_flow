@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import type { LoyaltyCard as PrismaLoyaltyCard } from '@prisma/client'
 import { PrismaService } from './prisma.service'
 import { ILoyaltyCardRepository } from '@domain/repositories/ILoyaltyCardRepository'
 import { LoyaltyCard } from '@domain/entities/LoyaltyCard'
@@ -40,7 +41,7 @@ export class PrismaLoyaltyCardRepository implements ILoyaltyCardRepository {
     return this.map(row)
   }
 
-  private map(row: any): LoyaltyCard {
+  private map(row: PrismaLoyaltyCard): LoyaltyCard {
     return {
       id: row.id,
       tenantId: row.tenantId,

@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common'
+import type { Prisma } from '@prisma/client'
 import { PrismaService } from './prisma.service'
 import { IAppointmentRepository, FindConflictsInput, ListAppointmentsFilter, FinancialSummary } from '@domain/repositories/IAppointmentRepository'
 import { Appointment, CreateAppointmentInput, AppointmentStatus } from '@domain/entities/Appointment'
+
+type AppointmentRow = Prisma.AppointmentGetPayload<{ include: { services: true } }>
+type AppointmentServiceRow = AppointmentRow['services'][number]
 
 @Injectable()
 export class PrismaAppointmentRepository implements IAppointmentRepository {
@@ -193,7 +197,7 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
     }
   }
 
-  private map(row: any): Appointment {
+  private map(row: AppointmentRow): Appointment {
     return {
       id: row.id,
       tenantId: row.tenantId,
@@ -207,7 +211,7 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
       cancelReason: row.cancelReason ?? undefined,
       barberNotes: row.barberNotes ?? undefined,
       depositPaidCents: row.depositPaidCents ?? undefined,
-      services: row.services.map((s: any) => ({
+      services: row.services.map((s: AppointmentServiceRow) => ({
         serviceId: s.serviceId,
         priceSnapshot: s.priceSnapshot,
         durationSnapshot: s.durationSnapshot,
