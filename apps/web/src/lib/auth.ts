@@ -30,7 +30,7 @@ const loginSchema = z.object({
 
 const DEFAULT_TENANT_ID = process.env.TENANT_ID ?? 'tenant-dubarber-001'
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signOut } = NextAuth({
   providers: [
     Credentials({
       credentials: {
