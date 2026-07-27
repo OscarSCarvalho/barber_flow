@@ -36,7 +36,7 @@ export default function BlocksClient({ token }: { token: string }) {
 
   const fetcher = <T,>(url: string): Promise<T> => api.get<T>(url, { token })
 
-  const { data, mutate } = useSWR<{ blocks: Block[]; appointments: any[] }>(
+  const { data, mutate } = useSWR<{ blocks: Block[] }>(
     `/manual-blocks/schedule?date=${previewDate}T00:00:00.000Z`,
     fetcher,
   )
@@ -58,8 +58,8 @@ export default function BlocksClient({ token }: { token: string }) {
       setReason('')
       setSuccessMsg('Horário bloqueado com sucesso!')
       mutate()
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError((err as Error).message)
     } finally {
       setSubmitting(false)
     }
@@ -69,8 +69,8 @@ export default function BlocksClient({ token }: { token: string }) {
     try {
       await api.delete(`/manual-blocks/${id}`, { token })
       mutate()
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError((err as Error).message)
     }
   }
 

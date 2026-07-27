@@ -1,7 +1,7 @@
 'use client'
 
 import { Service } from '@/types'
-import { Clock, DollarSign, CheckCircle2 } from 'lucide-react'
+import { Clock, CheckCircle2 } from 'lucide-react'
 
 function formatPrice(cents: number) {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })

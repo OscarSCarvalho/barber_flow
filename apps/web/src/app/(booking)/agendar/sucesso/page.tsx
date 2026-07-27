@@ -45,8 +45,8 @@ export default function SucessoPage({ searchParams }: PageProps) {
     try {
       await api.post('/reviews', { appointmentId: id, rating, comment: comment || undefined })
       setReviewSent(true)
-    } catch (err: any) {
-      setReviewError(err.message)
+    } catch (err: unknown) {
+      setReviewError((err as Error).message)
     } finally {
       setSubmittingReview(false)
     }

@@ -2,8 +2,6 @@ import { api } from '@/lib/api'
 import { Service, Professional } from '@/types'
 import BookingWizard from '@/components/booking/BookingWizard'
 
-const DEFAULT_TENANT_ID = process.env.DEFAULT_TENANT_ID ?? ''
-
 async function getInitialData() {
   const [services, professionals] = await Promise.all([
     api.get<Service[]>('/services').catch(() => [] as Service[]),

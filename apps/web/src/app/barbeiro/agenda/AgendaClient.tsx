@@ -15,6 +15,17 @@ interface Block {
   reason?: string
 }
 
+interface BarberAppt {
+  id: string
+  clientName: string
+  clientPhone: string
+  startsAt: string
+  endsAt: string
+  status: string
+  barberNotes?: string
+  services: Array<{ serviceId: string; priceSnapshot: number; durationSnapshot: number }>
+}
+
 export default function AgendaClient({ token }: { token: string }) {
   const [selectedDate, setSelectedDate] = useState(startOfDay(new Date()))
 
@@ -22,7 +33,7 @@ export default function AgendaClient({ token }: { token: string }) {
 
   const fetcher = <T,>(url: string): Promise<T> => api.get<T>(url, { token })
 
-  const { data, isLoading, mutate } = useSWR<{ appointments: any[]; blocks: Block[] }>(
+  const { data, isLoading, mutate } = useSWR<{ appointments: BarberAppt[]; blocks: Block[] }>(
     `/manual-blocks/schedule?date=${dateParam}T00:00:00.000Z`,
     fetcher,
     { refreshInterval: 60_000 },
@@ -96,7 +107,7 @@ export default function AgendaClient({ token }: { token: string }) {
               {b.reason && <p className="text-amber-600 mt-0.5">{b.reason}</p>}
             </div>
           ))}
-          {appointments.map((appt: any) => (
+          {appointments.map((appt) => (
             <AppointmentCard
               key={appt.id}
               {...appt}

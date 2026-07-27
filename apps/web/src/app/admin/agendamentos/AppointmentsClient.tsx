@@ -63,8 +63,8 @@ export default function AppointmentsClient({
       try {
         const data = await api.get<Appointment[]>(`/appointments?${params}`, { token })
         setAppointments(data)
-      } catch (err: any) {
-        setError(err.message ?? 'Erro ao buscar agendamentos')
+      } catch (err: unknown) {
+        setError((err as Error).message ?? 'Erro ao buscar agendamentos')
       }
     })
   }
