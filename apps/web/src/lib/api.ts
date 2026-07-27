@@ -1,11 +1,20 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+// Server-side (SSR/Server Components): use internal URL so the Node process reaches the API directly.
+// Client-side (browser): use an empty base so calls go to the same origin (/api/v1/...)
+// and Next.js rewrites forward them to the API — no CORS, works from any device on the LAN.
+function getApiBase() {
+  if (typeof window === 'undefined') {
+    return process.env.API_INTERNAL_URL ?? 'http://localhost:3001'
+  }
+  return ''
+}
 
 type RequestOptions = RequestInit & { token?: string }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { token, ...init } = options
+  const base = getApiBase()
 
-  const res = await fetch(`${API_URL}/api/v1${path}`, {
+  const res = await fetch(`${base}/api/v1${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',

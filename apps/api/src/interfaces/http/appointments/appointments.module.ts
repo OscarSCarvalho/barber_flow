@@ -4,10 +4,13 @@ import { AvailabilityModule } from '../availability/availability.module'
 import { PrismaAppointmentRepository } from '@infrastructure/database/PrismaAppointmentRepository'
 import { PrismaServiceRepository } from '@infrastructure/database/PrismaServiceRepository'
 import { PrismaProfessionalRepository } from '@infrastructure/database/PrismaProfessionalRepository'
+import { PrismaLoyaltyCardRepository } from '@infrastructure/database/PrismaLoyaltyCardRepository'
 import { RedisLockService } from '@infrastructure/cache/redis-lock.service'
 import { CreateAppointmentUseCase } from '@application/appointments/CreateAppointmentUseCase'
 import { CancelAppointmentUseCase } from '@application/appointments/CancelAppointmentUseCase'
 import { ListAppointmentsUseCase } from '@application/appointments/ListAppointmentsUseCase'
+import { AddAppointmentNoteUseCase } from '@application/appointments/AddAppointmentNoteUseCase'
+import { CompleteAppointmentUseCase } from '@application/appointments/CompleteAppointmentUseCase'
 
 @Module({
   imports: [AvailabilityModule],
@@ -16,6 +19,7 @@ import { ListAppointmentsUseCase } from '@application/appointments/ListAppointme
     PrismaAppointmentRepository,
     PrismaServiceRepository,
     PrismaProfessionalRepository,
+    PrismaLoyaltyCardRepository,
     {
       provide: CreateAppointmentUseCase,
       useFactory: (
@@ -34,6 +38,17 @@ import { ListAppointmentsUseCase } from '@application/appointments/ListAppointme
       provide: ListAppointmentsUseCase,
       useFactory: (appt: PrismaAppointmentRepository) => new ListAppointmentsUseCase(appt),
       inject: [PrismaAppointmentRepository],
+    },
+    {
+      provide: AddAppointmentNoteUseCase,
+      useFactory: (appt: PrismaAppointmentRepository) => new AddAppointmentNoteUseCase(appt),
+      inject: [PrismaAppointmentRepository],
+    },
+    {
+      provide: CompleteAppointmentUseCase,
+      useFactory: (appt: PrismaAppointmentRepository, loyalty: PrismaLoyaltyCardRepository) =>
+        new CompleteAppointmentUseCase(appt, loyalty),
+      inject: [PrismaAppointmentRepository, PrismaLoyaltyCardRepository],
     },
   ],
 })

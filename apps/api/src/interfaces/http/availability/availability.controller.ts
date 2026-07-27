@@ -7,6 +7,13 @@ import { AvailabilityCacheService } from '@infrastructure/cache/availability-cac
 import { CheckAvailabilityDto, GetAvailableProfessionalsDto } from '@interfaces/dtos/availability.dto'
 import { ServiceNotFoundError, ServiceInactiveError } from '@domain/errors'
 
+// new Date('YYYY-MM-DD') parses as UTC midnight — in UTC-3 that shifts to the previous day.
+// This helper parses the string as LOCAL midnight so getDay() returns the correct weekday.
+function parseDateLocal(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
 @SkipThrottle()
 @ApiTags('availability')
 @Controller('availability')
@@ -20,7 +27,7 @@ export class AvailabilityController {
   @Get()
   @ApiOperation({ summary: 'Verificar disponibilidade de horários de um profissional' })
   async check(@Query() dto: CheckAvailabilityDto) {
-    const date = new Date(dto.date)
+    const date = parseDateLocal(dto.date)
     if (isNaN(date.getTime())) throw new BadRequestException('Data inválida')
 
     const cached = await this.cache.get(dto.professionalId, dto.date, dto.serviceIds)
@@ -53,7 +60,7 @@ export class AvailabilityController {
     @Request() req: { user?: { tenantId: string } },
   ) {
     const tenantId = req.user?.tenantId ?? process.env.DEFAULT_TENANT_ID ?? ''
-    const date = new Date(dto.date)
+    const date = parseDateLocal(dto.date)
     if (isNaN(date.getTime())) throw new BadRequestException('Data inválida')
 
     const slotStartsAt = dto.slotStartsAt ? new Date(dto.slotStartsAt) : date

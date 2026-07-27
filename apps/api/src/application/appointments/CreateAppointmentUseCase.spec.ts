@@ -27,6 +27,10 @@ function makeRepos(conflictsCount = 0) {
       status: 'CONFIRMED', services: [], createdAt: new Date(), updatedAt: new Date(),
     }),
     updateStatus: jest.fn(),
+    updateNotes: jest.fn(),
+    findPendingReminders: jest.fn(),
+    markReminderSent: jest.fn(),
+    getFinancialSummary: jest.fn(),
   }
 
   const serviceRepo: IServiceRepository = {

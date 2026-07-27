@@ -39,6 +39,10 @@ function makeRepos(overrides: Partial<{
     list: jest.fn(),
     create: jest.fn(),
     updateStatus: jest.fn(),
+    updateNotes: jest.fn(),
+    findPendingReminders: jest.fn(),
+    markReminderSent: jest.fn(),
+    getFinancialSummary: jest.fn(),
   }
 
   const manualBlockRepo: IManualBlockRepository = {

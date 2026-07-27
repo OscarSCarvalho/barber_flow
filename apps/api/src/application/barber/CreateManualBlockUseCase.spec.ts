@@ -46,6 +46,10 @@ function makeApptRepo(conflictsCount = 0): IAppointmentRepository {
     list: jest.fn(),
     create: jest.fn(),
     updateStatus: jest.fn(),
+    updateNotes: jest.fn(),
+    findPendingReminders: jest.fn(),
+    markReminderSent: jest.fn(),
+    getFinancialSummary: jest.fn(),
   }
 }
 

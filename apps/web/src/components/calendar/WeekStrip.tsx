@@ -21,94 +21,70 @@ export default function WeekStrip({
 }: WeekStripProps) {
   const today = startOfDay(new Date())
   const startDate = addDays(today, weekOffset * 7)
-
   const days = Array.from({ length: DAYS_IN_STRIP }, (_, i) => addDays(startDate, i))
 
+  function DayButton({ day }: { day: Date }) {
+    const past = isPast(startOfDay(day)) && !isToday(day)
+    const selected = selectedDate ? isSameDay(day, selectedDate) : false
+    const todayDay = isToday(day)
+
+    return (
+      <button
+        onClick={() => !past && onSelectDate(day)}
+        disabled={past}
+        aria-pressed={selected}
+        aria-label={format(day, "dd 'de' MMMM", { locale: ptBR })}
+        className={`
+          flex flex-col items-center justify-center w-full py-1 rounded-lg transition-all min-h-[44px]
+          ${past ? 'opacity-25 cursor-not-allowed' : 'cursor-pointer active:scale-95'}
+          ${selected
+            ? 'bg-[#1a1a1a] text-white shadow-sm'
+            : todayDay
+            ? 'bg-[#c9a84c]/10 text-[#b8973b] border border-[#c9a84c]/30'
+            : 'hover:bg-gray-100 text-gray-600'
+          }
+        `}
+      >
+        <span className="text-[10px] uppercase font-semibold leading-none mb-0.5 opacity-60">
+          {format(day, 'EEEEE', { locale: ptBR })}
+        </span>
+        <span className="font-bold text-sm leading-none">
+          {format(day, 'dd')}
+        </span>
+      </button>
+    )
+  }
+
   return (
-    <div className="select-none">
-      <div className="flex items-center justify-between mb-3">
+    <div className="select-none mb-1">
+      {/* Month label + nav */}
+      <div className="flex items-center justify-between mb-1.5">
         <button
           onClick={() => onWeekChange(weekOffset - 1)}
           disabled={weekOffset <= 0}
           className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           aria-label="Semana anterior"
         >
-          <ChevronLeft size={18} />
+          <ChevronLeft size={16} />
         </button>
-
-        <span className="text-sm font-medium text-gray-600">
+        <span className="text-xs font-medium text-gray-500 capitalize">
           {format(startDate, "MMMM 'de' yyyy", { locale: ptBR })}
         </span>
-
         <button
           onClick={() => onWeekChange(weekOffset + 1)}
           className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 transition-colors"
           aria-label="Próxima semana"
         >
-          <ChevronRight size={18} />
+          <ChevronRight size={16} />
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
-        {days.slice(0, 7).map((day) => {
-          const past = isPast(startOfDay(day)) && !isToday(day)
-          const selected = selectedDate ? isSameDay(day, selectedDate) : false
-
-          return (
-            <button
-              key={day.toISOString()}
-              onClick={() => !past && onSelectDate(day)}
-              disabled={past}
-              aria-pressed={selected}
-              aria-label={format(day, "dd 'de' MMMM", { locale: ptBR })}
-              className={`
-                flex flex-col items-center py-2.5 rounded-xl transition-all text-sm
-                ${past ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}
-                ${selected
-                  ? 'bg-[#1a1a1a] text-white shadow-md'
-                  : isToday(day) && !selected
-                  ? 'bg-[#c9a84c]/10 text-[#b8973b] border border-[#c9a84c]/30'
-                  : 'hover:bg-gray-100 text-gray-600'
-                }
-              `}
-            >
-              <span className="text-xs uppercase font-medium opacity-70">
-                {format(day, 'EEE', { locale: ptBR })}
-              </span>
-              <span className="font-bold text-base leading-tight">{format(day, 'dd')}</span>
-            </button>
-          )
-        })}
+      {/* Week rows */}
+      <div className="grid grid-cols-7 gap-0.5">
+        {days.slice(0, 7).map((day) => <DayButton key={day.toISOString()} day={day} />)}
       </div>
-
-      <div className="grid grid-cols-7 gap-1 mt-1">
-        {days.slice(7).map((day) => {
-          const past = isPast(startOfDay(day)) && !isToday(day)
-          const selected = selectedDate ? isSameDay(day, selectedDate) : false
-
-          return (
-            <button
-              key={day.toISOString()}
-              onClick={() => !past && onSelectDate(day)}
-              disabled={past}
-              aria-pressed={selected}
-              aria-label={format(day, "dd 'de' MMMM", { locale: ptBR })}
-              className={`
-                flex flex-col items-center py-2.5 rounded-xl transition-all text-sm
-                ${past ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}
-                ${selected
-                  ? 'bg-[#1a1a1a] text-white shadow-md'
-                  : 'hover:bg-gray-100 text-gray-600'
-                }
-              `}
-            >
-              <span className="text-xs uppercase font-medium opacity-70">
-                {format(day, 'EEE', { locale: ptBR })}
-              </span>
-              <span className="font-bold text-base leading-tight">{format(day, 'dd')}</span>
-            </button>
-          )
-        })}
+      <div className="grid grid-cols-7 gap-0.5 mt-0.5">
+        {days.slice(7).map((day) => <DayButton key={day.toISOString()} day={day} />)}
       </div>
     </div>
   )

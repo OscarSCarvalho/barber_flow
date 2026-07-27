@@ -18,6 +18,7 @@ enum AppointmentStatus {
   CONFIRMED
   CANCELLED
   NO_SHOW
+  COMPLETED
 }
 
 enum DayOfWeek {
@@ -30,6 +31,13 @@ enum DayOfWeek {
   SUNDAY
 }
 
+enum WaitlistStatus {
+  WAITING
+  NOTIFIED
+  CONFIRMED
+  EXPIRED
+}
+
 model Tenant {
   id        String   @id @default(uuid())
   name      String
@@ -37,10 +45,13 @@ model Tenant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users        User[]
+  users         User[]
   professionals Professional[]
-  services     Service[]
-  appointments Appointment[]
+  services      Service[]
+  appointments  Appointment[]
+  waitlistEntries WaitlistEntry[]
+  loyaltyCards  LoyaltyCard[]
+  reviews       Review[]
 }
 
 model User {
@@ -63,18 +74,20 @@ model User {
 }
 
 model Professional {
-  id       String  @id @default(uuid())
-  tenantId String
-  userId   String  @unique
-  bio      String?
+  id        String  @id @default(uuid())
+  tenantId  String
+  userId    String  @unique
+  bio       String?
   avatarUrl String?
-  isActive Boolean @default(true)
+  isActive  Boolean @default(true)
 
-  tenant       Tenant         @relation(fields: [tenantId], references: [id])
-  user         User           @relation(fields: [userId], references: [id])
-  schedules    WorkSchedule[]
-  appointments Appointment[]
-  manualBlocks ManualBlock[]
+  tenant          Tenant          @relation(fields: [tenantId], references: [id])
+  user            User            @relation(fields: [userId], references: [id])
+  schedules       WorkSchedule[]
+  appointments    Appointment[]
+  manualBlocks    ManualBlock[]
+  waitlistEntries WaitlistEntry[]
+  reviews         Review[]
 
   @@index([tenantId, isActive])
 }
@@ -83,10 +96,10 @@ model WorkSchedule {
   id             String    @id @default(uuid())
   professionalId String
   dayOfWeek      DayOfWeek
-  startTime      String    // "09:00"
-  endTime        String    // "19:00"
-  breakStart     String?   // "12:00"
-  breakEnd       String?   // "13:00"
+  startTime      String
+  endTime        String
+  breakStart     String?
+  breakEnd       String?
 
   professional Professional @relation(fields: [professionalId], references: [id])
 
@@ -100,6 +113,8 @@ model Service {
   durationMinutes Int
   priceInCents    Int
   isActive        Boolean  @default(true)
+  depositRequired Boolean  @default(false)
+  depositCents    Int?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -111,32 +126,37 @@ model Service {
 }
 
 model Appointment {
-  id             String            @id @default(uuid())
-  tenantId       String
-  professionalId String
-  clientId       String?
-  clientName     String
-  clientPhone    String
-  startsAt       DateTime
-  endsAt         DateTime
-  status         AppointmentStatus @default(CONFIRMED)
-  cancelReason   String?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  id              String            @id @default(uuid())
+  tenantId        String
+  professionalId  String
+  clientId        String?
+  clientName      String
+  clientPhone     String
+  startsAt        DateTime
+  endsAt          DateTime
+  status          AppointmentStatus @default(CONFIRMED)
+  cancelReason    String?
+  barberNotes     String?
+  depositPaidCents Int?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   tenant       Tenant               @relation(fields: [tenantId], references: [id])
   professional Professional         @relation(fields: [professionalId], references: [id])
   client       User?                @relation("ClientAppointments", fields: [clientId], references: [id])
   services     AppointmentService[]
+  review       Review?
+  reminders    ReminderLog[]
 
   @@index([tenantId, professionalId, startsAt])
   @@index([tenantId, status])
+  @@index([clientPhone])
 }
 
 model AppointmentService {
-  appointmentId String
-  serviceId     String
-  priceSnapshot Int
+  appointmentId    String
+  serviceId        String
+  priceSnapshot    Int
   durationSnapshot Int
 
   appointment Appointment @relation(fields: [appointmentId], references: [id])
@@ -156,4 +176,67 @@ model ManualBlock {
   professional Professional @relation(fields: [professionalId], references: [id])
 
   @@index([professionalId, startsAt])
+}
+
+model Review {
+  id             String   @id @default(uuid())
+  tenantId       String
+  appointmentId  String   @unique
+  professionalId String
+  clientName     String
+  rating         Int
+  comment        String?
+  createdAt      DateTime @default(now())
+
+  tenant       Tenant       @relation(fields: [tenantId], references: [id])
+  appointment  Appointment  @relation(fields: [appointmentId], references: [id])
+  professional Professional @relation(fields: [professionalId], references: [id])
+
+  @@index([tenantId, professionalId])
+}
+
+model LoyaltyCard {
+  id             String   @id @default(uuid())
+  tenantId       String
+  clientPhone    String
+  completedCuts  Int      @default(0)
+  redeemedCuts   Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, clientPhone])
+  @@index([tenantId])
+}
+
+model WaitlistEntry {
+  id             String         @id @default(uuid())
+  tenantId       String
+  professionalId String
+  clientName     String
+  clientPhone    String
+  serviceIds     String[]
+  preferredDate  DateTime?
+  status         WaitlistStatus @default(WAITING)
+  notifiedAt     DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime       @default(now())
+
+  tenant       Tenant       @relation(fields: [tenantId], references: [id])
+  professional Professional @relation(fields: [professionalId], references: [id])
+
+  @@index([tenantId, professionalId, status])
+  @@index([status, expiresAt])
+}
+
+model ReminderLog {
+  id             String   @id @default(uuid())
+  appointmentId  String
+  reminderType   String
+  sentAt         DateTime @default(now())
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+
+  @@unique([appointmentId, reminderType])
 }

@@ -70,7 +70,7 @@ export default function DateTimePicker({
   return (
     <div>
       <h2 className="text-lg font-semibold text-gray-900 mb-1">Escolha a data e horário</h2>
-      <p className="text-sm text-gray-500 mb-5">
+      <p className="text-sm text-gray-500 mb-2 sm:mb-5">
         {isAnyProfessional
           ? 'Selecione um horário — atribuiremos o profissional disponível.'
           : 'Selecione um dia e clique no horário desejado.'}
@@ -98,7 +98,7 @@ export default function DateTimePicker({
         </div>
       )}
 
-      <div className="mt-6 flex gap-3">
+      <div className="mt-3 sm:mt-6 flex gap-3">
         <button
           onClick={onBack}
           className="flex-1 border border-gray-300 text-gray-700 text-sm font-medium py-2.5 rounded-lg hover:bg-gray-50 transition-colors"

@@ -76,3 +76,27 @@ export class UnauthorizedError extends DomainError {
     super('Acesso não autorizado', 'UNAUTHORIZED')
   }
 }
+
+export class AppointmentNotFoundError extends DomainError {
+  constructor(id: string) {
+    super(`Agendamento não encontrado: ${id}`, 'APPOINTMENT_NOT_FOUND')
+  }
+}
+
+export class AppointmentNotCompletedError extends DomainError {
+  constructor() {
+    super('Avaliação só pode ser feita após a conclusão do serviço', 'APPOINTMENT_NOT_COMPLETED')
+  }
+}
+
+export class ReviewAlreadyExistsError extends DomainError {
+  constructor() {
+    super('Este agendamento já foi avaliado', 'REVIEW_ALREADY_EXISTS')
+  }
+}
+
+export class WaitlistEntryNotFoundError extends DomainError {
+  constructor() {
+    super('Entrada na lista de espera não encontrada', 'WAITLIST_ENTRY_NOT_FOUND')
+  }
+}

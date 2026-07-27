@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 
@@ -7,6 +7,15 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'BarberFlow — Agendamento Online',
   description: 'Agende seu horário na barbearia de forma rápida e fácil.',
+  manifest: '/manifest.json',
+  appleWebApp: { statusBarStyle: 'black', title: 'BarberFlow' },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#1a1a1a',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

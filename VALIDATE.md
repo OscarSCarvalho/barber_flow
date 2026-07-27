@@ -99,10 +99,55 @@
 
 ---
 
-## Próximos passos (pós-testes manuais)
+---
 
-- [ ] Deploy API → Railway
-- [ ] Deploy Web → Vercel
-- [ ] Configurar variáveis de produção
-- [ ] Gerar seed de dados demo
-- [ ] Handoff e treinamento do cliente
+## 9. Mobile / PWA
+
+| Controle | Implementado |
+|---|---|
+| `manifest.json` com `display: standalone`, `start_url: /agendar`, ícones 192px/512px | ✅ |
+| `appleWebApp: { statusBarStyle: 'black' }` — status bar não sobrepõe conteúdo | ✅ |
+| `Viewport` export separado conforme API Next.js 14 | ✅ |
+| Layout `height: 100dvh` + `overflow-y-auto` no `<main>` — scroll interno (padrão app nativo) | ✅ |
+| `min-h-0` no flex child para habilitar `overflow-y-auto` | ✅ |
+| Scroll automático para slot grid ao selecionar data | ✅ `AvailabilityCalendar.tsx` |
+| Scroll para topo ao mudar de step no wizard | ✅ `BookingWizard.tsx` useEffect |
+| Tamanho mínimo de toque 44px nos botões do calendário (Apple HIG) | ✅ `WeekStrip.tsx` |
+| Nomes de dias com letra única (`EEEEE`) para não sobrepor em 7 colunas | ✅ |
+| Resumo de confirmação em grid 2×2 no mobile (reduz altura) | ✅ `BookingConfirmation.tsx` |
+
+---
+
+## 10. Rede / CORS (Desenvolvimento)
+
+| Controle | Implementado |
+|---|---|
+| `NODE_ENV !== production` → `origin: true` (aceita IP da LAN para testes mobile) | ✅ `main.ts` |
+| `NODE_ENV === production` → `origin: FRONTEND_URL` (restritivo) | ✅ |
+| Proxy Next.js rewrites `/api/v1/*` → `http://localhost:3001/api/v1/*` | ✅ `next.config.mjs` |
+| Browser usa URL relativa `/api/v1/...` (sem `localhost` hardcoded no bundle) | ✅ `api.ts`, `use-availability.ts` |
+| SSR usa `API_INTERNAL_URL` (variável de servidor, não exposta ao client) | ✅ |
+
+---
+
+## 11. Bugs Críticos Corrigidos
+
+| Bug | Arquivo | Fix |
+|---|---|---|
+| Login ADMIN redirecionava para agenda do barbeiro | `login/page.tsx` | `getSession()` pós-login + check de `role` |
+| Horários de segunda-feira sempre bloqueados (UTC vs local) | `availability.controller.ts` | `parseDateLocal()` → `new Date(y, m-1, d)` |
+| Horários não carregavam no mobile (`localhost` no bundle JS) | `use-availability.ts` | URL relativa `/api/v1/...` via proxy |
+| CORS bloqueava celular na LAN | `main.ts` | `origin: true` em dev |
+| WeekStrip sobrepondo texto em mobile | `WeekStrip.tsx` | `EEEEE` (1 letra) + `min-h-[44px]` |
+| Campos de formulário fora da tela no mobile | `BookingConfirmation.tsx` | Grid 2×2 compacto + `flex-col gap-3` |
+
+---
+
+## Próximos passos (pré-deploy)
+
+- [ ] Deploy API → Railway (configurar `DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, `NODE_ENV=production`)
+- [ ] Deploy Web → Vercel (configurar `API_INTERNAL_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET`)
+- [ ] Configurar `FRONTEND_URL` na API apontando para o domínio Vercel
+- [ ] Testar PWA em produção (HTTPS obrigatório para "Add to Home Screen" no iOS)
+- [ ] Gerar seed de dados demo para ambiente de produção
+- [ ] Handoff e treinamento do cliente Du

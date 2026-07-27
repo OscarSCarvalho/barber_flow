@@ -4,10 +4,10 @@ import useSWR from 'swr'
 import { format } from 'date-fns'
 import { AvailabilityResponse } from '@/types'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
-
+// Uses the Next.js rewrite proxy (/api/v1/* → NestJS).
+// Empty base = same-origin relative URL — works on any device, no CORS.
 async function fetcher(url: string): Promise<AvailabilityResponse> {
-  const res = await fetch(`${API_URL}/api/v1${url}`)
+  const res = await fetch(`/api/v1${url}`)
   if (!res.ok) throw new Error('Erro ao buscar disponibilidade')
   return res.json()
 }

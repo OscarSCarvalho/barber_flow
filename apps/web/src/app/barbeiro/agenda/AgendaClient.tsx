@@ -22,7 +22,7 @@ export default function AgendaClient({ token }: { token: string }) {
 
   const fetcher = <T,>(url: string): Promise<T> => api.get<T>(url, { token })
 
-  const { data, isLoading } = useSWR<{ appointments: any[]; blocks: Block[] }>(
+  const { data, isLoading, mutate } = useSWR<{ appointments: any[]; blocks: Block[] }>(
     `/manual-blocks/schedule?date=${dateParam}T00:00:00.000Z`,
     fetcher,
     { refreshInterval: 60_000 },
@@ -32,6 +32,16 @@ export default function AgendaClient({ token }: { token: string }) {
   const blocks: Block[] = data?.blocks ?? []
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(startOfDay(new Date()), i))
+
+  async function handleSaveNote(appointmentId: string, notes: string) {
+    await api.patch(`/appointments/${appointmentId}/note`, { barberNotes: notes }, { token })
+    mutate()
+  }
+
+  async function handleComplete(appointmentId: string) {
+    await api.patch(`/appointments/${appointmentId}/complete`, {}, { token })
+    mutate()
+  }
 
   return (
     <div>
@@ -87,7 +97,12 @@ export default function AgendaClient({ token }: { token: string }) {
             </div>
           ))}
           {appointments.map((appt: any) => (
-            <AppointmentCard key={appt.id} {...appt} />
+            <AppointmentCard
+              key={appt.id}
+              {...appt}
+              onSaveNote={(notes: string) => handleSaveNote(appt.id, notes)}
+              onComplete={() => handleComplete(appt.id)}
+            />
           ))}
         </div>
       )}

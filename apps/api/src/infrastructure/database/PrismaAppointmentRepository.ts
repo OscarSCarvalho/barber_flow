@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from './prisma.service'
-import { IAppointmentRepository, FindConflictsInput, ListAppointmentsFilter } from '@domain/repositories/IAppointmentRepository'
+import { IAppointmentRepository, FindConflictsInput, ListAppointmentsFilter, FinancialSummary } from '@domain/repositories/IAppointmentRepository'
 import { Appointment, CreateAppointmentInput, AppointmentStatus } from '@domain/entities/Appointment'
 
 @Injectable()
@@ -112,6 +112,87 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
     return this.map(row)
   }
 
+  async updateNotes(id: string, barberNotes: string): Promise<Appointment> {
+    const row = await this.prisma.appointment.update({
+      where: { id },
+      data: { barberNotes },
+      include: { services: true },
+    })
+    return this.map(row)
+  }
+
+  async findPendingReminders(hoursAhead: number): Promise<Appointment[]> {
+    const now = new Date()
+    const cutoff = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000)
+    const rows = await this.prisma.appointment.findMany({
+      where: {
+        status: { in: ['CONFIRMED', 'PENDING'] },
+        startsAt: { gte: now, lte: cutoff },
+        reminders: { none: { reminderType: `${hoursAhead}h` } },
+      },
+      include: { services: true },
+    })
+    return rows.map(this.map)
+  }
+
+  async markReminderSent(appointmentId: string, reminderType: string): Promise<void> {
+    await this.prisma.reminderLog.create({
+      data: { appointmentId, reminderType },
+    })
+  }
+
+  async getFinancialSummary(
+    tenantId: string,
+    from: Date,
+    to: Date,
+    professionalId?: string,
+  ): Promise<FinancialSummary> {
+    const where = { tenantId, professionalId, startsAt: { gte: from, lte: to } }
+
+    const [completed, cancelled, noShow] = await Promise.all([
+      this.prisma.appointment.findMany({
+        where: { ...where, status: 'COMPLETED' },
+        include: { services: { include: { service: true } } },
+      }),
+      this.prisma.appointment.count({ where: { ...where, status: 'CANCELLED' } }),
+      this.prisma.appointment.count({ where: { ...where, status: 'NO_SHOW' } }),
+    ])
+
+    const byServiceMap = new Map<string, { serviceName: string; count: number; revenue: number }>()
+    let totalRevenue = 0
+
+    for (const appt of completed) {
+      for (const as of appt.services) {
+        totalRevenue += as.priceSnapshot
+        const existing = byServiceMap.get(as.serviceId)
+        if (existing) {
+          existing.count++
+          existing.revenue += as.priceSnapshot
+        } else {
+          byServiceMap.set(as.serviceId, {
+            serviceName: as.service.name,
+            count: 1,
+            revenue: as.priceSnapshot,
+          })
+        }
+      }
+    }
+
+    const appointmentCount = completed.length
+    const totalScheduled = appointmentCount + cancelled + noShow
+    const cancellationRate = totalScheduled > 0
+      ? Math.round(((cancelled + noShow) / totalScheduled) * 100)
+      : 0
+
+    return {
+      totalRevenue,
+      appointmentCount,
+      ticketMedio: appointmentCount > 0 ? Math.round(totalRevenue / appointmentCount) : 0,
+      byService: Array.from(byServiceMap.values()),
+      cancellations: { cancelledCount: cancelled, noShowCount: noShow, totalScheduled, cancellationRate },
+    }
+  }
+
   private map(row: any): Appointment {
     return {
       id: row.id,
@@ -124,6 +205,8 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
       endsAt: row.endsAt,
       status: row.status,
       cancelReason: row.cancelReason ?? undefined,
+      barberNotes: row.barberNotes ?? undefined,
+      depositPaidCents: row.depositPaidCents ?? undefined,
       services: row.services.map((s: any) => ({
         serviceId: s.serviceId,
         priceSnapshot: s.priceSnapshot,

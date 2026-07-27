@@ -10,6 +10,11 @@ import { ProfessionalsModule } from './interfaces/http/professionals/professiona
 import { AppointmentsModule } from './interfaces/http/appointments/appointments.module'
 import { AvailabilityModule } from './interfaces/http/availability/availability.module'
 import { ManualBlocksModule } from './interfaces/http/manual-blocks/manual-blocks.module'
+import { ReviewsModule } from './interfaces/http/reviews/reviews.module'
+import { LoyaltyModule } from './interfaces/http/loyalty/loyalty.module'
+import { WaitlistModule } from './interfaces/http/waitlist/waitlist.module'
+import { FinancialModule } from './interfaces/http/financial/financial.module'
+import { RemindersModule } from './interfaces/http/reminders/reminders.module'
 import { TenantGuard } from './interfaces/guards/tenant.guard'
 import { LoggingInterceptor } from './interfaces/http/interceptors/logging.interceptor'
 
@@ -25,6 +30,11 @@ import { LoggingInterceptor } from './interfaces/http/interceptors/logging.inter
     AppointmentsModule,
     AvailabilityModule,
     ManualBlocksModule,
+    ReviewsModule,
+    LoyaltyModule,
+    WaitlistModule,
+    FinancialModule,
+    RemindersModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

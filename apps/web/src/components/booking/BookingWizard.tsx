@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Service, Professional, TimeSlot } from '@/types'
 import { api, ApiError } from '@/lib/api'
@@ -45,6 +45,12 @@ export default function BookingWizard({ services, professionals }: BookingWizard
 
   const currentIndex = STEP_ORDER.indexOf(step)
 
+  // Scroll back to top of wizard whenever the step changes
+  useEffect(() => {
+    const main = document.querySelector('main')
+    if (main) main.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [step])
+
   function goTo(s: BookingStep) {
     setBookingError(null)
     setStep(s)
@@ -87,6 +93,7 @@ export default function BookingWizard({ services, professionals }: BookingWizard
       const params = new URLSearchParams({
         id: appointment.id,
         name: clientName,
+        phone: clientPhone.replace(/\D/g, ''),
         slot: new Date(state.selectedSlot.startsAt).toISOString(),
         duration: String(state.selectedServices.reduce((a, s) => a + s.durationMinutes, 0)),
         price: String(state.selectedServices.reduce((a, s) => a + s.priceInCents, 0)),
@@ -94,6 +101,8 @@ export default function BookingWizard({ services, professionals }: BookingWizard
         professional: state.selectedProfessional === 'ANY'
           ? 'Profissional disponível'
           : ((state.selectedProfessional as Professional).user?.name ?? ''),
+        serviceIds: state.selectedServices.map((s) => s.id).join(','),
+        professionalId: professionalId ?? '',
       })
 
       router.push(`/agendar/sucesso?${params.toString()}`)
@@ -120,7 +129,7 @@ export default function BookingWizard({ services, professionals }: BookingWizard
   return (
     <div>
       {/* Progress bar */}
-      <div className="flex items-center gap-2 mb-8">
+      <div className="flex items-center gap-2 mb-3 sm:mb-8">
         {STEP_ORDER.map((s, i) => (
           <div key={s} className="flex items-center gap-2 flex-1">
             <div
@@ -156,7 +165,7 @@ export default function BookingWizard({ services, professionals }: BookingWizard
       )}
 
       {/* Steps */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-3 sm:p-6">
         {step === 'SERVICES' && (
           <ServiceSelector
             services={services}

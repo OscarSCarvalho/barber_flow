@@ -1,10 +1,11 @@
 import {
   Body, Controller, Get, Param, Patch, Post,
   UseGuards, Request, HttpCode, HttpStatus,
-  NotFoundException, ConflictException, BadRequestException, ForbiddenException,
+  NotFoundException, ConflictException, BadRequestException,
   Query,
 } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
+import { IsOptional, IsString } from 'class-validator'
 import { Throttle } from '@nestjs/throttler'
 import { JwtAuthGuard } from '@interfaces/guards/jwt-auth.guard'
 import { RolesGuard } from '@interfaces/guards/roles.guard'
@@ -13,12 +14,19 @@ import { CreateAppointmentDto, CancelAppointmentDto, ListAppointmentsDto } from 
 import { CreateAppointmentUseCase } from '@application/appointments/CreateAppointmentUseCase'
 import { CancelAppointmentUseCase, AppointmentNotFoundError, AppointmentAlreadyCancelledError } from '@application/appointments/CancelAppointmentUseCase'
 import { ListAppointmentsUseCase } from '@application/appointments/ListAppointmentsUseCase'
+import { AddAppointmentNoteUseCase } from '@application/appointments/AddAppointmentNoteUseCase'
+import { CompleteAppointmentUseCase } from '@application/appointments/CompleteAppointmentUseCase'
 import { AvailabilityCacheService } from '@infrastructure/cache/availability-cache.service'
 import { PrismaProfessionalRepository } from '@infrastructure/database/PrismaProfessionalRepository'
 import {
   AppointmentConflictError, PastDateError,
   ServiceNotFoundError, ServiceInactiveError,
+  AppointmentNotFoundError as DomainAppointmentNotFoundError,
 } from '@domain/errors'
+
+class AddNoteDto {
+  @IsString() barberNotes!: string
+}
 
 const DEFAULT_TENANT_ID = process.env.DEFAULT_TENANT_ID ?? ''
 
@@ -29,6 +37,8 @@ export class AppointmentsController {
     private readonly createAppointment: CreateAppointmentUseCase,
     private readonly cancelAppointment: CancelAppointmentUseCase,
     private readonly listAppointments: ListAppointmentsUseCase,
+    private readonly addNote: AddAppointmentNoteUseCase,
+    private readonly completeAppointment: CompleteAppointmentUseCase,
     private readonly availabilityCache: AvailabilityCacheService,
     private readonly professionalRepo: PrismaProfessionalRepository,
   ) {}
@@ -111,6 +121,36 @@ export class AppointmentsController {
     } catch (err) {
       if (err instanceof AppointmentNotFoundError) throw new NotFoundException(err.message)
       if (err instanceof AppointmentAlreadyCancelledError) throw new ConflictException(err.message)
+      throw err
+    }
+  }
+
+  @Patch(':id/complete')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'BARBER')
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Marcar agendamento como concluído' })
+  async complete(@Param('id') id: string) {
+    try {
+      return await this.completeAppointment.execute({ appointmentId: id })
+    } catch (err) {
+      if (err instanceof DomainAppointmentNotFoundError) throw new NotFoundException(err.message)
+      throw err
+    }
+  }
+
+  @Patch(':id/note')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'BARBER')
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Adicionar nota do barbeiro ao agendamento' })
+  async note(@Param('id') id: string, @Body() dto: AddNoteDto) {
+    try {
+      return await this.addNote.execute({ appointmentId: id, barberNotes: dto.barberNotes })
+    } catch (err) {
+      if (err instanceof DomainAppointmentNotFoundError) throw new NotFoundException(err.message)
       throw err
     }
   }

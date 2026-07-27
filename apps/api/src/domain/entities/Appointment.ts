@@ -1,4 +1,4 @@
-export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'NO_SHOW'
+export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'NO_SHOW' | 'COMPLETED'
 
 export interface AppointmentService {
   serviceId: string
@@ -17,6 +17,8 @@ export interface Appointment {
   endsAt: Date
   status: AppointmentStatus
   cancelReason?: string
+  barberNotes?: string
+  depositPaidCents?: number
   services: AppointmentService[]
   createdAt: Date
   updatedAt: Date
