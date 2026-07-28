@@ -25,6 +25,14 @@ export class PrismaWaitlistRepository implements IWaitlistRepository {
     return rows.map(this.map)
   }
 
+  async findAllByTenant(tenantId: string, status?: WaitlistStatus): Promise<WaitlistEntry[]> {
+    const rows = await this.prisma.waitlistEntry.findMany({
+      where: { tenantId, ...(status ? { status } : {}) },
+      orderBy: { createdAt: 'desc' },
+    })
+    return rows.map(this.map)
+  }
+
   async updateStatus(id: string, status: WaitlistStatus, notifiedAt?: Date): Promise<WaitlistEntry> {
     const row = await this.prisma.waitlistEntry.update({
       where: { id },

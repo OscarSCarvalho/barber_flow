@@ -31,6 +31,12 @@ function todayParam() {
   return format(new Date(), 'yyyy-MM-dd')
 }
 
+function daysOffsetParam(offset: number) {
+  const d = new Date()
+  d.setDate(d.getDate() + offset)
+  return format(d, 'yyyy-MM-dd')
+}
+
 interface AppointmentsClientProps {
   initialAppointments: Appointment[]
   professionals: Professional[]
@@ -43,30 +49,39 @@ export default function AppointmentsClient({
   token,
 }: AppointmentsClientProps) {
   const [appointments, setAppointments] = useState(initialAppointments)
-  const [dateFrom, setDateFrom] = useState(todayParam())
-  const [dateTo, setDateTo] = useState(todayParam())
+  const [dateFrom, setDateFrom] = useState(daysOffsetParam(-7))
+  const [dateTo, setDateTo] = useState(daysOffsetParam(30))
   const [professionalId, setProfessionalId] = useState('')
   const [status, setStatus] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
+  const [isLoading, setIsLoading] = useState(false)
+  const [, startTransition] = useTransition()
 
   async function fetchAppointments() {
     setError(null)
+    setIsLoading(true)
     const params = new URLSearchParams()
     if (dateFrom) params.set('dateFrom', `${dateFrom}T00:00:00.000Z`)
     if (dateTo) params.set('dateTo', `${dateTo}T23:59:59.999Z`)
     if (professionalId) params.set('professionalId', professionalId)
     if (status) params.set('status', status)
 
-    startTransition(async () => {
-      try {
-        const data = await api.get<Appointment[]>(`/appointments?${params}`, { token })
-        setAppointments(data)
-      } catch (err: unknown) {
-        setError((err as Error).message ?? 'Erro ao buscar agendamentos')
-      }
-    })
+    try {
+      const data = await api.get<Appointment[]>(`/appointments?${params}`, { token })
+      startTransition(() => setAppointments(data))
+    } catch (err: unknown) {
+      setError((err as Error).message ?? 'Erro ao buscar agendamentos')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  function clearFilters() {
+    setProfessionalId('')
+    setStatus('')
+    setDateFrom(daysOffsetParam(-7))
+    setDateTo(daysOffsetParam(30))
   }
 
   async function handleCancel(id: string) {
@@ -152,14 +167,20 @@ export default function AppointmentsClient({
             </select>
           </div>
         </div>
-        <div className="mt-3 flex justify-end">
+        <div className="mt-3 flex justify-end gap-2">
+          <button
+            onClick={clearFilters}
+            className="text-sm text-gray-500 hover:text-gray-700 px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
+          >
+            Limpar filtros
+          </button>
           <button
             onClick={fetchAppointments}
-            disabled={isPending}
+            disabled={isLoading}
             className="flex items-center gap-2 bg-[#1a1a1a] hover:bg-gray-800 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
           >
             <Search size={14} />
-            {isPending ? 'Buscando...' : 'Buscar'}
+            {isLoading ? 'Buscando...' : 'Buscar'}
           </button>
         </div>
       </div>

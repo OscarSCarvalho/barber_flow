@@ -8,6 +8,14 @@ import { LoyaltyCard } from '@domain/entities/LoyaltyCard'
 export class PrismaLoyaltyCardRepository implements ILoyaltyCardRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findAllByTenant(tenantId: string): Promise<LoyaltyCard[]> {
+    const rows = await this.prisma.loyaltyCard.findMany({
+      where: { tenantId },
+      orderBy: { completedCuts: 'desc' },
+    })
+    return rows.map(this.map)
+  }
+
   async findByPhone(tenantId: string, clientPhone: string): Promise<LoyaltyCard | null> {
     const row = await this.prisma.loyaltyCard.findUnique({
       where: { tenantId_clientPhone: { tenantId, clientPhone } },

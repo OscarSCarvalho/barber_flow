@@ -16,5 +16,6 @@ import { JoinWaitlistUseCase } from '@application/waitlist/JoinWaitlistUseCase'
       inject: [PrismaProfessionalRepository, PrismaWaitlistRepository],
     },
   ],
+  exports: [PrismaWaitlistRepository],
 })
 export class WaitlistModule {}

@@ -66,16 +66,18 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
   }
 
   async list(filter: ListAppointmentsFilter): Promise<Appointment[]> {
+    const startsAt =
+      filter.dateFrom || filter.dateTo
+        ? { gte: filter.dateFrom, lte: filter.dateTo }
+        : undefined
+
     const rows = await this.prisma.appointment.findMany({
       where: {
         tenantId: filter.tenantId,
-        professionalId: filter.professionalId,
-        clientId: filter.clientId,
-        status: filter.status,
-        startsAt: {
-          gte: filter.dateFrom,
-          lte: filter.dateTo,
-        },
+        ...(filter.professionalId ? { professionalId: filter.professionalId } : {}),
+        ...(filter.clientId ? { clientId: filter.clientId } : {}),
+        ...(filter.status ? { status: filter.status } : {}),
+        ...(startsAt ? { startsAt } : {}),
       },
       include: { services: true },
       orderBy: { startsAt: 'asc' },
@@ -165,7 +167,34 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
     const byServiceMap = new Map<string, { serviceName: string; count: number; revenue: number }>()
     let totalRevenue = 0
 
+    const diffDays = Math.ceil((to.getTime() - from.getTime()) / 86_400_000)
+    const granularity: 'day' | 'week' | 'month' =
+      diffDays <= 31 ? 'day' : diffDays <= 120 ? 'week' : 'month'
+
+    const periodMap = new Map<string, { label: string; revenue: number; count: number }>()
+
+    // pre-fill all buckets with zero so the chart has no gaps
+    const cursor = new Date(from)
+    while (cursor <= to) {
+      const key = this.bucketKey(cursor, granularity)
+      if (!periodMap.has(key)) {
+        periodMap.set(key, { label: this.bucketLabel(cursor, granularity), revenue: 0, count: 0 })
+      }
+      if (granularity === 'day') cursor.setDate(cursor.getDate() + 1)
+      else if (granularity === 'week') cursor.setDate(cursor.getDate() + 7)
+      else cursor.setMonth(cursor.getMonth() + 1)
+    }
+
     for (const appt of completed) {
+      const key = this.bucketKey(appt.startsAt, granularity)
+      const bucket = periodMap.get(key)
+      if (bucket) {
+        bucket.count++
+        for (const as of appt.services) {
+          bucket.revenue += as.priceSnapshot
+        }
+      }
+
       for (const as of appt.services) {
         totalRevenue += as.priceSnapshot
         const existing = byServiceMap.get(as.serviceId)
@@ -193,8 +222,29 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
       appointmentCount,
       ticketMedio: appointmentCount > 0 ? Math.round(totalRevenue / appointmentCount) : 0,
       byService: Array.from(byServiceMap.values()),
+      byPeriod: Array.from(periodMap.values()),
+      granularity,
       cancellations: { cancelledCount: cancelled, noShowCount: noShow, totalScheduled, cancellationRate },
     }
+  }
+
+  private bucketKey(date: Date, granularity: 'day' | 'week' | 'month'): string {
+    if (granularity === 'month') return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+    if (granularity === 'week') {
+      const d = new Date(date)
+      const dow = d.getDay() || 7
+      d.setDate(d.getDate() - (dow - 1))
+      return d.toISOString().slice(0, 10)
+    }
+    return date.toISOString().slice(0, 10)
+  }
+
+  private bucketLabel(date: Date, granularity: 'day' | 'week' | 'month'): string {
+    const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+    if (granularity === 'month') return `${months[date.getMonth()]}/${String(date.getFullYear()).slice(2)}`
+    const dd = String(date.getDate()).padStart(2, '0')
+    const mm = String(date.getMonth() + 1).padStart(2, '0')
+    return `${dd}/${mm}`
   }
 
   private map(row: AppointmentRow): Appointment {

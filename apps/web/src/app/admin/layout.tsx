@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { Scissors, Users, CalendarDays, LayoutDashboard, LogOut, TrendingUp } from 'lucide-react'
+import { Scissors, Users, CalendarDays, LayoutDashboard, LogOut, TrendingUp, Clock, Gift } from 'lucide-react'
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -9,6 +9,8 @@ const navItems = [
   { href: '/admin/equipe', label: 'Equipe', icon: Users },
   { href: '/admin/agendamentos', label: 'Agendamentos', icon: CalendarDays },
   { href: '/admin/financeiro', label: 'Financeiro', icon: TrendingUp },
+  { href: '/admin/waitlist', label: 'Lista de Espera', icon: Clock },
+  { href: '/admin/fidelidade', label: 'Fidelidade', icon: Gift },
 ]
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

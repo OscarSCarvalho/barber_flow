@@ -21,6 +21,8 @@ export interface FinancialSummary {
   appointmentCount: number
   ticketMedio: number
   byService: Array<{ serviceName: string; count: number; revenue: number }>
+  byPeriod: Array<{ label: string; revenue: number; count: number }>
+  granularity: 'day' | 'week' | 'month'
   cancellations: {
     cancelledCount: number
     noShowCount: number

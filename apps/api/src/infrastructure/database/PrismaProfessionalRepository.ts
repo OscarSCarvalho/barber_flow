@@ -30,7 +30,10 @@ export class PrismaProfessionalRepository implements IProfessionalRepository {
   }
 
   async create(input: CreateProfessionalInput): Promise<Professional> {
-    const row = await this.prisma.professional.create({ data: input })
+    const row = await this.prisma.professional.create({
+      data: input,
+      include: { user: { select: { name: true, email: true } } },
+    })
     return this.map(row)
   }
 

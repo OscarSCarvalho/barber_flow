@@ -3,6 +3,7 @@ import { WaitlistEntry, CreateWaitlistEntryInput, WaitlistStatus } from '../enti
 export interface IWaitlistRepository {
   create(input: CreateWaitlistEntryInput): Promise<WaitlistEntry>
   findByProfessional(professionalId: string, tenantId: string): Promise<WaitlistEntry[]>
+  findAllByTenant(tenantId: string, status?: WaitlistStatus): Promise<WaitlistEntry[]>
   updateStatus(id: string, status: WaitlistStatus, notifiedAt?: Date): Promise<WaitlistEntry>
   expireOldEntries(): Promise<number>
 }
