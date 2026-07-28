@@ -27,10 +27,6 @@ function formatPrice(cents: number) {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-function todayParam() {
-  return format(new Date(), 'yyyy-MM-dd')
-}
-
 function daysOffsetParam(offset: number) {
   const d = new Date()
   d.setDate(d.getDate() + offset)
